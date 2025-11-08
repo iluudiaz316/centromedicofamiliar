@@ -102,32 +102,32 @@ export function UsersContent({ profile, users: initialUsers }: any) {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
               <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Nombre Completo</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Rol</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Teléfono</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Estado</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Acciones</th>
+                <thead className="bg-gray-50">
+                  <tr className="border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Nombre Completo</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Email</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Rol</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Teléfono</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Estado</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">Acciones</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredUsers.map((user: any) => (
-                    <tr key={user.id} className="border-b transition-colors hover:bg-gray-50/80">
+                    <tr key={user.id} className="transition-colors hover:bg-blue-50">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.full_name}</td>
                       <td className="px-4 py-3 text-sm text-gray-700">{user.email}</td>
                       <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-1 text-xs ${roleColors[user.role]}`}>
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${roleColors[user.role]}`}>
                           {roleLabels[user.role]}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">{user.phone || "N/A"}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`rounded-full px-2 py-1 text-xs ${
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${
                             user.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                           }`}
                         >
@@ -136,7 +136,13 @@ export function UsersContent({ profile, users: initialUsers }: any) {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => handleEdit(user)} title="Editar usuario">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(user)}
+                            title="Editar usuario"
+                            className="text-gray-700 hover:text-gray-900"
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
@@ -144,6 +150,7 @@ export function UsersContent({ profile, users: initialUsers }: any) {
                             variant="ghost"
                             onClick={() => handleChangePassword(user)}
                             title="Cambiar contraseña"
+                            className="text-gray-700 hover:text-gray-900"
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
@@ -152,6 +159,7 @@ export function UsersContent({ profile, users: initialUsers }: any) {
                             variant="ghost"
                             onClick={() => handleToggleStatus(user.id, user.is_active)}
                             title={user.is_active ? "Desactivar usuario" : "Activar usuario"}
+                            className="text-gray-700 hover:text-gray-900"
                           >
                             {user.is_active ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                           </Button>
@@ -163,7 +171,7 @@ export function UsersContent({ profile, users: initialUsers }: any) {
               </table>
 
               {filteredUsers.length === 0 && (
-                <div className="py-12 text-center text-gray-500">No se encontraron usuarios</div>
+                <div className="py-12 text-center text-gray-600 bg-white">No se encontraron usuarios</div>
               )}
             </div>
           </CardContent>
