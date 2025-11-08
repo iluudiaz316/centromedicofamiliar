@@ -116,15 +116,15 @@ export function UsersContent({ profile, users: initialUsers }: any) {
                 </thead>
                 <tbody>
                   {filteredUsers.map((user: any) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium">{user.full_name}</td>
-                      <td className="px-4 py-3 text-sm">{user.email}</td>
+                    <tr key={user.id} className="border-b transition-colors hover:bg-gray-50/80">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{user.full_name}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{user.email}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-xs ${roleColors[user.role]}`}>
                           {roleLabels[user.role]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm">{user.phone || "N/A"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{user.phone || "N/A"}</td>
                       <td className="px-4 py-3">
                         <span
                           className={`rounded-full px-2 py-1 text-xs ${
