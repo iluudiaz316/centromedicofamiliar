@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { getUserSession } from "@/lib/auth"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: Request) {
   try {
@@ -27,10 +28,11 @@ export async function POST(request: Request) {
       },
     })
 
-    // Update password in profiles table
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+
     const { error: updateError } = await supabaseAdmin
-      .from("profiles")
-      .update({ password: newPassword })
+      .from("users")
+      .update({ password_hash: passwordHash })
       .eq("id", userId)
 
     if (updateError) {
