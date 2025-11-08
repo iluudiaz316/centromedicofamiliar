@@ -9,13 +9,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { showSuccess, showError } from "@/lib/sweetalert"
+import { showSuccess, showError, showWarning } from "@/lib/sweetalert"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { AlertCircle } from "lucide-react"
 
 export function AppointmentDialog({ open, onOpenChange, appointment, patients, doctors, treatments, onSuccess }: any) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [hasConflict, setHasConflict] = useState(false)
+  const [conflictMessage, setConflictMessage] = useState("")
+  const [isCheckingConflict, setIsCheckingConflict] = useState(false)
+
   const [formData, setFormData] = useState({
     patient_id: "",
     doctor_id: "",
@@ -57,8 +62,104 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
     }
   }, [appointment, open])
 
+  const checkTimeConflict = async () => {
+    if (!formData.doctor_id || !formData.appointment_date || !formData.appointment_time || !formData.duration_minutes) {
+      setHasConflict(false)
+      setConflictMessage("")
+      return
+    }
+
+    setIsCheckingConflict(true)
+    console.log("[v0] Checking appointment conflicts...")
+
+    try {
+      const supabase = createClient()
+
+      const startTime = new Date(`${formData.appointment_date}T${formData.appointment_time}`)
+      const endTime = new Date(startTime.getTime() + Number.parseInt(formData.duration_minutes) * 60000)
+
+      console.log("[v0] Checking conflicts for:", {
+        doctor_id: formData.doctor_id,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        excludeId: appointment?.id,
+      })
+
+      let query = supabase
+        .from("appointments")
+        .select("*, patient:patients(first_name, last_name)")
+        .eq("doctor_id", formData.doctor_id)
+        .gte("appointment_date", startTime.toISOString().split("T")[0])
+        .lte("appointment_date", endTime.toISOString().split("T")[0])
+        .in("status", ["SCHEDULED", "CONFIRMED"])
+
+      if (appointment) {
+        query = query.neq("id", appointment.id)
+      }
+
+      const { data: existingAppointments, error } = await query
+
+      if (error) throw error
+
+      console.log("[v0] Found existing appointments:", existingAppointments)
+
+      const conflicts = existingAppointments?.filter((existing: any) => {
+        const existingStart = new Date(existing.appointment_date)
+        const existingEnd = new Date(existingStart.getTime() + existing.duration_minutes * 60000)
+
+        const overlaps = startTime < existingEnd && endTime > existingStart
+
+        console.log("[v0] Checking overlap:", {
+          existing: `${existingStart.toLocaleTimeString()} - ${existingEnd.toLocaleTimeString()}`,
+          new: `${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`,
+          overlaps,
+        })
+
+        return overlaps
+      })
+
+      if (conflicts && conflicts.length > 0) {
+        setHasConflict(true)
+        const conflict = conflicts[0]
+        const conflictStart = new Date(conflict.appointment_date)
+        const conflictEnd = new Date(conflictStart.getTime() + conflict.duration_minutes * 60000)
+
+        setConflictMessage(
+          `El doctor ya tiene una cita con ${conflict.patient.first_name} ${conflict.patient.last_name} ` +
+            `de ${conflictStart.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })} ` +
+            `a ${conflictEnd.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`,
+        )
+        console.log("[v0] Conflict detected:", conflictMessage)
+      } else {
+        setHasConflict(false)
+        setConflictMessage("")
+        console.log("[v0] No conflicts found")
+      }
+    } catch (error) {
+      console.error("[v0] Error checking conflicts:", error)
+    } finally {
+      setIsCheckingConflict(false)
+    }
+  }
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      checkTimeConflict()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [formData.doctor_id, formData.appointment_date, formData.appointment_time, formData.duration_minutes])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (hasConflict) {
+      await showWarning(
+        "No se puede agendar la cita porque el horario ya está ocupado. Por favor, seleccione otro horario.",
+      )
+      return
+    }
+
     setIsLoading(true)
 
     const supabase = createClient()
@@ -157,6 +258,20 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
           <DialogTitle>{appointment ? "Editar Cita" : "Nueva Cita"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {hasConflict && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <p className="text-sm font-medium">{conflictMessage}</p>
+            </div>
+          )}
+
+          {isCheckingConflict && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+              <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full" />
+              <p className="text-sm">Verificando disponibilidad...</p>
+            </div>
+          )}
+
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="patient_id">Paciente *</Label>
@@ -301,7 +416,11 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              type="submit"
+              disabled={isLoading || hasConflict || isCheckingConflict}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {isLoading ? "Guardando..." : appointment ? "Actualizar" : "Crear Cita"}
             </Button>
           </div>
