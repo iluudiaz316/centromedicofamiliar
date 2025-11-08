@@ -78,10 +78,17 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
       const startTime = new Date(`${formData.appointment_date}T${formData.appointment_time}`)
       const endTime = new Date(startTime.getTime() + Number.parseInt(formData.duration_minutes) * 60000)
 
+      const dayStart = new Date(formData.appointment_date)
+      dayStart.setHours(0, 0, 0, 0)
+      const dayEnd = new Date(formData.appointment_date)
+      dayEnd.setHours(23, 59, 59, 999)
+
       console.log("[v0] Checking conflicts for:", {
         doctor_id: formData.doctor_id,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
+        dayStart: dayStart.toISOString(),
+        dayEnd: dayEnd.toISOString(),
         excludeId: appointment?.id,
       })
 
@@ -89,8 +96,8 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
         .from("appointments")
         .select("*, patient:patients(first_name, last_name)")
         .eq("doctor_id", formData.doctor_id)
-        .gte("appointment_date", startTime.toISOString().split("T")[0])
-        .lte("appointment_date", endTime.toISOString().split("T")[0])
+        .gte("appointment_date", dayStart.toISOString())
+        .lte("appointment_date", dayEnd.toISOString())
         .in("status", ["SCHEDULED", "CONFIRMED"])
 
       if (appointment) {
@@ -99,7 +106,10 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
 
       const { data: existingAppointments, error } = await query
 
-      if (error) throw error
+      if (error) {
+        console.error("[v0] Error querying appointments:", error)
+        throw error
+      }
 
       console.log("[v0] Found existing appointments:", existingAppointments)
 
@@ -124,12 +134,13 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
         const conflictStart = new Date(conflict.appointment_date)
         const conflictEnd = new Date(conflictStart.getTime() + conflict.duration_minutes * 60000)
 
-        setConflictMessage(
+        const message =
           `El doctor ya tiene una cita con ${conflict.patient.first_name} ${conflict.patient.last_name} ` +
-            `de ${conflictStart.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })} ` +
-            `a ${conflictEnd.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`,
-        )
-        console.log("[v0] Conflict detected:", conflictMessage)
+          `de ${conflictStart.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })} ` +
+          `a ${conflictEnd.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`
+
+        setConflictMessage(message)
+        console.log("[v0] Conflict detected:", message)
       } else {
         setHasConflict(false)
         setConflictMessage("")
@@ -155,7 +166,8 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
 
     if (hasConflict) {
       await showWarning(
-        "No se puede agendar la cita porque el horario ya está ocupado. Por favor, seleccione otro horario.",
+        "No se puede agendar la cita",
+        "El horario seleccionado ya está ocupado. Por favor, seleccione otro horario.",
       )
       return
     }
@@ -253,15 +265,18 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{appointment ? "Editar Cita" : "Nueva Cita"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {hasConflict && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800">
-              <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <p className="text-sm font-medium">{conflictMessage}</p>
+            <div className="flex items-start gap-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg text-red-900">
+              <AlertCircle className="h-6 w-6 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-base mb-1">Horario no disponible</p>
+                <p className="text-sm">{conflictMessage}</p>
+              </div>
             </div>
           )}
 
