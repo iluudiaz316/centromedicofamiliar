@@ -79,9 +79,9 @@ export function AppointmentsList({ appointments: initialAppointments, onEdit, on
   }
 
   return (
-    <Card>
+    <Card className="bg-white">
       <CardHeader>
-        <CardTitle>Lista de Citas</CardTitle>
+        <CardTitle className="text-gray-900">Lista de Citas</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex gap-4">
@@ -110,36 +110,36 @@ export function AppointmentsList({ appointments: initialAppointments, onEdit, on
           </Select>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Fecha y Hora</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Paciente</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Doctor</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Motivo</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">Estado</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-500">Acciones</th>
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full bg-white">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Fecha y Hora</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Paciente</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Doctor</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Motivo</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Estado</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {filteredAppointments.map((appointment: any) => (
-                <tr key={appointment.id} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm">
+                <tr key={appointment.id} className="hover:bg-blue-50 transition-colors">
+                  <td className="px-4 py-3 text-sm text-gray-900">
                     {new Date(appointment.appointment_date).toLocaleDateString("es-GT")}
                     <br />
-                    <span className="text-gray-500">
+                    <span className="text-gray-600 font-medium">
                       {new Date(appointment.appointment_date).toLocaleTimeString("es-GT", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
                     {appointment.patient?.first_name || ""} {appointment.patient?.last_name || ""}
                   </td>
-                  <td className="px-4 py-3 text-sm">{appointment.doctor?.full_name || "Sin asignar"}</td>
-                  <td className="px-4 py-3 text-sm">{appointment.reason}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">{appointment.doctor?.full_name || "Sin asignar"}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">{appointment.reason}</td>
                   <td className="px-4 py-3">
                     <Select
                       value={appointment.status}
@@ -160,13 +160,18 @@ export function AppointmentsList({ appointments: initialAppointments, onEdit, on
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => onEdit(appointment)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onEdit(appointment)}
+                        className="text-gray-700 hover:text-blue-600 hover:bg-blue-100"
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-100"
                         onClick={() => handleDelete(appointment.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -179,7 +184,7 @@ export function AppointmentsList({ appointments: initialAppointments, onEdit, on
           </table>
 
           {filteredAppointments.length === 0 && (
-            <div className="py-12 text-center text-gray-500">No se encontraron citas</div>
+            <div className="py-12 text-center text-gray-600 bg-white">No se encontraron citas</div>
           )}
         </div>
       </CardContent>
