@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
+import bcrypt from "bcryptjs"
 
 export type UserRole = "ADMIN" | "DOCTOR" | "RECEPTIONIST"
 
@@ -53,26 +54,39 @@ export async function validateLogin(email: string, password: string): Promise<Us
 
   console.log("[v0] Attempting login for:", email)
 
-  const { data, error } = await supabase.rpc("validate_user_login", {
-    user_email: email,
-    user_password: password,
-  })
+  // Query the user directly from the database
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .eq("is_active", true)
+    .limit(1)
 
-  console.log("[v0] RPC response:", { data, error, dataType: typeof data, isArray: Array.isArray(data) })
+  console.log("[v0] Database query result:", { users, error })
 
   if (error) {
-    console.error("[v0] Login RPC error:", error)
+    console.error("[v0] Database query error:", error)
     return null
   }
 
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    console.log("[v0] No user found or invalid credentials")
+  if (!users || users.length === 0) {
+    console.log("[v0] No user found with email:", email)
     return null
   }
 
-  const userData = data[0]
+  const userData = users[0]
 
-  console.log("[v0] Login successful for user:", userData)
+  // Validate password using bcrypt
+  const isValidPassword = await bcrypt.compare(password, userData.password_hash)
+
+  console.log("[v0] Password validation result:", isValidPassword)
+
+  if (!isValidPassword) {
+    console.log("[v0] Invalid password for user:", email)
+    return null
+  }
+
+  console.log("[v0] Login successful for user:", userData.email)
 
   return {
     id: userData.id,
