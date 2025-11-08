@@ -74,6 +74,7 @@ export function UserDialog({ open, onOpenChange, user, onSuccess }: any) {
 
         const { data: updated } = await supabase.from("users").select("*").eq("id", user.id).single()
 
+        onOpenChange(false)
         await showSuccess("Usuario actualizado exitosamente")
         onSuccess(updated)
       } else {
@@ -91,11 +92,11 @@ export function UserDialog({ open, onOpenChange, user, onSuccess }: any) {
 
         if (createError) throw createError
 
+        onOpenChange(false)
         await showSuccess("Usuario creado exitosamente")
         onSuccess(newUser)
       }
 
-      onOpenChange(false)
       router.refresh()
     } catch (error: any) {
       await showError(error.message || "Error al guardar el usuario")

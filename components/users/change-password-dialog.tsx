@@ -49,11 +49,11 @@ export function ChangePasswordDialog({ open, onOpenChange, user }: any) {
         throw new Error(result.error || "Error al cambiar la contraseña")
       }
 
-      await showSuccess("Contraseña actualizada exitosamente")
       setPassword("")
       setConfirmPassword("")
       setShowPassword(false)
       onOpenChange(false)
+      await showSuccess("Contraseña actualizada exitosamente")
     } catch (error: any) {
       console.error("[v0] Error changing password:", error.message)
       await showError(error.message || "Error al cambiar la contraseña")

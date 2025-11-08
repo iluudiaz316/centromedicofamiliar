@@ -63,17 +63,18 @@ export function TreatmentDialog({ open, onOpenChange, treatment, onSuccess }: an
           .single()
 
         if (error) throw error
+        onOpenChange(false)
         await showSuccess("Tratamiento actualizado exitosamente")
         onSuccess(updated)
       } else {
         const { data: created, error } = await supabase.from("treatments").insert([data]).select().single()
 
         if (error) throw error
+        onOpenChange(false)
         await showSuccess("Tratamiento creado exitosamente")
         onSuccess(created)
       }
 
-      onOpenChange(false)
       router.refresh()
     } catch (error: any) {
       await showError(error.message || "Error al guardar el tratamiento")

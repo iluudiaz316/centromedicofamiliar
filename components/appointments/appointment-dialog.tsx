@@ -99,6 +99,7 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
           treatment: treatmentData.data,
         }
 
+        onOpenChange(false)
         await showSuccess("Cita actualizada exitosamente")
         onSuccess(fullData)
       } else {
@@ -136,11 +137,11 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
           treatment: treatmentData.data,
         }
 
+        onOpenChange(false)
         await showSuccess("Cita creada exitosamente")
         onSuccess(fullData)
       }
 
-      onOpenChange(false)
       router.refresh()
     } catch (error: any) {
       await showError(error.message || "Error al guardar la cita")
