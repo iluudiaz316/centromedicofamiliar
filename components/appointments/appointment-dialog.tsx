@@ -78,17 +78,16 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
       const startTime = new Date(`${formData.appointment_date}T${formData.appointment_time}`)
       const endTime = new Date(startTime.getTime() + Number.parseInt(formData.duration_minutes) * 60000)
 
-      const dayStart = new Date(formData.appointment_date)
-      dayStart.setHours(0, 0, 0, 0)
-      const dayEnd = new Date(formData.appointment_date)
-      dayEnd.setHours(23, 59, 59, 999)
+      const selectedDate = new Date(formData.appointment_date)
+      const nextDay = new Date(selectedDate)
+      nextDay.setDate(nextDay.getDate() + 1)
 
       console.log("[v0] Checking conflicts for:", {
         doctor_id: formData.doctor_id,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
-        dayStart: dayStart.toISOString(),
-        dayEnd: dayEnd.toISOString(),
+        selectedDate: selectedDate.toISOString(),
+        nextDay: nextDay.toISOString(),
         excludeId: appointment?.id,
       })
 
@@ -96,8 +95,8 @@ export function AppointmentDialog({ open, onOpenChange, appointment, patients, d
         .from("appointments")
         .select("*, patient:patients(first_name, last_name)")
         .eq("doctor_id", formData.doctor_id)
-        .gte("appointment_date", dayStart.toISOString())
-        .lte("appointment_date", dayEnd.toISOString())
+        .gte("appointment_date", selectedDate.toISOString())
+        .lt("appointment_date", nextDay.toISOString())
         .in("status", ["SCHEDULED", "CONFIRMED"])
 
       if (appointment) {
